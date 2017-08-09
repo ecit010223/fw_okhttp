@@ -28,6 +28,8 @@
             android:name=".POSTActivity"
             android:exported="false"
             android:launchMode="singleTop"/>
+        <activity android:name=".OtherActivity">
+        </activity>
     </application>
 
 </manifest>

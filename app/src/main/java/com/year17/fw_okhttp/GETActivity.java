@@ -88,6 +88,7 @@ public class GETActivity extends AppCompatActivity implements View.OnClickListen
                 if(grantResults.length>0&&grantResults[0]== PackageManager.PERMISSION_GRANTED){
                     onClick(mCurrentClickView);
                 }
+                break;
         }
     }
 

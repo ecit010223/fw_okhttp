@@ -33,6 +33,7 @@ import okio.BufferedSink;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button btnGET;
     private Button btnPOST;
+    private Button btnOther;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnGET.setOnClickListener(this);
         btnPOST = (Button)findViewById(R.id.btn_to_post);
         btnPOST.setOnClickListener(this);
+        btnOther = (Button)findViewById(R.id.btn_to_other);
+        btnOther.setOnClickListener(this);
     }
 
     @Override
@@ -56,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_to_post:
                 POSTActivity.entry(MainActivity.this);
+                break;
+            case R.id.btn_to_other:
+                OtherActivity.entry(MainActivity.this);
                 break;
         }
     }

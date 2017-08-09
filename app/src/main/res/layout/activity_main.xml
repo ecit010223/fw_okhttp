@@ -14,5 +14,9 @@
         android:id="@+id/btn_to_post"
         style="@style/DefaultStyle"
         android:text="POST请求实例"/>
+    <Button
+        android:id="@+id/btn_to_other"
+        style="@style/DefaultStyle"
+        android:text="其它请求实例"/>
 
 </LinearLayout>
