@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/btn_post_markdown"
+        style="@style/DefaultStyle"
+        android:text="POST提交Markdown"/>
+
+    <Button
+        android:id="@+id/btn_post_stream"
+        style="@style/DefaultStyle"
+        android:text="POST提交流"/>
+
+    <Button
+        android:id="@+id/btn_post_file"
+        style="@style/DefaultStyle"
+        android:text="POST提交文件"/>
+
+    <Button
+        android:id="@+id/btn_post_form"
+        style="@style/DefaultStyle"
+        android:text="POST提交表单"/>
+
+    <Button
+        android:id="@+id/btn_post_blocks"
+        style="@style/DefaultStyle"
+        android:text="POST提交分块请求"/>
+</LinearLayout>

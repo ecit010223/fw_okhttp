@@ -6,13 +6,13 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/btn_to_get"
+        android:id="@+id/btn_sync"
         style="@style/DefaultStyle"
-        android:text="GET请求实例"/>
+        android:text="同步GET请求"/>
 
     <Button
-        android:id="@+id/btn_to_post"
+        android:id="@+id/btn_async"
         style="@style/DefaultStyle"
-        android:text="POST请求实例"/>
+        android:text="异步GET请求"/>
 
 </LinearLayout>
