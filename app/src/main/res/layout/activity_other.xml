@@ -24,4 +24,14 @@
         android:id="@+id/btn_cache_interceptor"
         style="@style/DefaultStyle"
         android:text="拦截器设置响应缓存机制"/>
+
+    <Button
+        android:id="@+id/btn_cancel_call"
+        style="@style/DefaultStyle"
+        android:text="取消一个Call"/>
+
+    <Button
+        android:id="@+id/btn_set_call"
+        style="@style/DefaultStyle"
+        android:text="为每个call配置"/>
 </LinearLayout>

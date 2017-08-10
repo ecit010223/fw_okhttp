@@ -11,6 +11,11 @@
         android:text="POST提交Markdown"/>
 
     <Button
+        android:id="@+id/btn_post_json"
+        style="@style/DefaultStyle"
+        android:text="POST提交json"/>
+
+    <Button
         android:id="@+id/btn_post_stream"
         style="@style/DefaultStyle"
         android:text="POST提交流"/>

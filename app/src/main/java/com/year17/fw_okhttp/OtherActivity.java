@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -17,14 +16,18 @@ import android.view.View;
 import android.widget.Button;
 
 import com.google.gson.Gson;
+import com.year17.fw_okhttp.interceptors.CacheInterceptor;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
 import okhttp3.CacheControl;
+import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -35,6 +38,8 @@ public class OtherActivity extends AppCompatActivity implements View.OnClickList
     private Button btnGSON;
     private Button btnCache;
     private Button btnCacheInterceptor;
+    private Button btnCancelCall;
+    private Button btnSetCall;
     /** 网络请求，通过Request.Builder辅助类来构建 **/
     private Request mRequest;
     /** 网络请求返回 **/
@@ -46,6 +51,8 @@ public class OtherActivity extends AppCompatActivity implements View.OnClickList
     private OkHttpClient mOkHttpClient;
     /** 当前点击按钮 **/
     private View mCurrentClickView;
+    /** 线程池 **/
+    private ScheduledExecutorService mScheduledExecutorService;
 
     public static void entry(Context from){
         Intent intent = new Intent(from,OtherActivity.class);
@@ -57,6 +64,7 @@ public class OtherActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_other);
         mContext = this;
+        mScheduledExecutorService = Executors.newScheduledThreadPool(1);
         initView();
     }
 
@@ -69,6 +77,10 @@ public class OtherActivity extends AppCompatActivity implements View.OnClickList
         btnCache.setOnClickListener(this);
         btnCacheInterceptor = (Button)findViewById(R.id.btn_cache_interceptor);
         btnCacheInterceptor.setOnClickListener(this);
+        btnCancelCall = (Button)findViewById(R.id.btn_cancel_call);
+        btnCancelCall.setOnClickListener(this);
+        btnSetCall = (Button)findViewById(R.id.btn_set_call);
+        btnSetCall.setOnClickListener(this);
     }
 
     @Override
@@ -123,6 +135,12 @@ public class OtherActivity extends AppCompatActivity implements View.OnClickList
                     break;
                 case R.id.btn_cache_interceptor:
                     cacheInterceptor();
+                    break;
+                case R.id.btn_cancel_call:
+                    cancelCall();
+                    break;
+                case R.id.btn_set_call:
+                    setCall();
                     break;
             }
         }else{
@@ -269,8 +287,150 @@ public class OtherActivity extends AppCompatActivity implements View.OnClickList
      * 这种情况下我们就需要使用Interceptor来重写Respose的头部信息，从而让okhttp支持缓存。
      */
     private void cacheInterceptor(){
-        mOkHttpClient = new OkHttpClient();
+        Log.d(Constants.TAG,"processCache()");
+        //10MB
+        int cacheSize = 10*1024*1024;
+        Cache cache = new Cache(createDir("cache_interceptor"),cacheSize);
 
+        //加入拦截器
+        mOkHttpClient = new OkHttpClient.Builder()
+                .addNetworkInterceptor(new CacheInterceptor())
+                .cache(cache)
+                .connectTimeout(20,TimeUnit.SECONDS)
+                .readTimeout(20,TimeUnit.SECONDS)
+                .build();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    //强制使用网络
+                    Request request1 = new Request.Builder()
+                            .url(Constants.URL_CACHE)
+                            .cacheControl(CacheControl.FORCE_NETWORK)
+                            .build();
+                    //如果服务器端强制使用缓存，则可通过将缓存时间修改为0的方式实现不缓存
+//                    Request request1 = new Request.Builder()
+//                            .url(Constants.URL_CACHE)
+//                            .cacheControl(new CacheControl.Builder().maxAge(0, TimeUnit.SECONDS).build())
+//                            .build();
+                    Response response1 = mOkHttpClient.newCall(request1).execute();
+                    if (!response1.isSuccessful())
+                        throw new IOException("Unexpected code " + response1);
+                    String response1Body = response1.body().string();
+                    Log.d(Constants.TAG, "response1Body:" + response1Body);
+                    Log.d(Constants.TAG, "response1:" + response1);
+                    Log.d(Constants.TAG, "cache response1:" + response1.cacheResponse());
+                    Log.d(Constants.TAG, "network response1:" + response1.networkResponse());
+                    Log.d(Constants.TAG, "response1.cacheControl()"+response1.cacheControl().toString());
+
+                    /**
+                     * 强制使用缓存
+                     * 如果你使用FORCE_CACHE,但是response要求使用网络(即服务器不支持缓存),OkHttp将会返回一个504 Unsatisfiable Request响应。
+                     * 如果服务器不支持缓存，则需要使用Interceptor来重写Response的头部信息，从而让OkHttp支持缓存
+                     */
+                    Request request2 = new Request.Builder()
+                            .url(Constants.URL_CACHE)
+                            .cacheControl(CacheControl.FORCE_CACHE)
+                            .build();
+                    Response response2 = mOkHttpClient.newCall(request2).execute();
+                    if(response2.code()!=504){
+                        Log.d(Constants.TAG,"可以使用缓存");
+                        String response2Body = response2.body().string();
+                        Log.d(Constants.TAG, "response2Body:" + response2Body);
+                        Log.d(Constants.TAG, "response2:" + response2);
+                        Log.d(Constants.TAG, "cache response2:" + response2.cacheResponse());
+                        Log.d(Constants.TAG, "network response2:" + response2.networkResponse());
+                        Log.d(Constants.TAG, "response2.cacheControl()"+response2.cacheControl().toString());
+
+                        Log.d(Constants.TAG,"Response 2 equals Response 1? " + response1Body.equals(response2Body));
+                    }else{
+                        Log.d(Constants.TAG,"不可以使用缓存");
+                    }
+                    if (!response2.isSuccessful())
+                        throw new IOException("Unexpected code " + response2);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * 使用Call.cancel()可以立即停止掉一个正在执行的call，如果一个线程正在写请求或者读响应，将会引发IOException，
+     * 当call没有必要的时候，使用这个api可以节约网络资源，例如当用户离开一个应用时，不管同步还是异步的call都可以取消。
+     * 你可以通过tags来同时取消多个请求，当你构建一请求时，使用RequestBuilder.tag(tag)来分配一个标签，
+     * 之后你就可以用OkHttpClient.cancel(tag)来取消所有带有这个tag的call。
+     */
+    private void cancelCall(){
+        mOkHttpClient = new OkHttpClient();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mRequest = new Request.Builder()
+                        .url(Constants.URL_DELAY_2)
+                        .build();
+                /**
+                 * nanoTime()返回最准确的可用系统计时器的当前值，以毫微秒为单位。
+                 * 此方法只能用于测量已过的时间，与系统或钟表时间的其他任何时间概念无关。
+                 * 返回值表示从某一固定但任意的时间算起的毫微秒数（或许从以后算起，所以该值可能为负）
+                 */
+                final long startNanos = System.nanoTime();
+                final Call call = mOkHttpClient.newCall(mRequest);
+                // 第2个参数“1”表示延时1秒执行，表示1秒后取消网络请求
+                mScheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(Constants.TAG,(System.nanoTime()-startNanos)/1e9f + " canceling call.");
+                        call.cancel();
+                        Log.d(Constants.TAG,(System.nanoTime()-startNanos)/1e9f + " canceled call.");
+                    }
+                },1,TimeUnit.SECONDS);
+                Log.d(Constants.TAG,(System.nanoTime()-startNanos)/1e9f + " executing call.");
+                try {
+                    mResponse = call.execute();
+                    Log.d(Constants.TAG, (System.nanoTime() - startNanos)/1e9f+" call was expected to fail, but completed:"+mResponse);
+
+                } catch (IOException e) {
+//                    e.printStackTrace();
+                    Log.d(Constants.TAG,(System.nanoTime() - startNanos)/1e9f+" call failed as expected: "+e);
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * 使用OkHttpClient，所有的HTTP Client配置包括代理设置、超时设置、缓存设置，当你需要为单个call改变配置的时候，
+     * 调用OkHttpClient.newBuilder()，这个api将会返回一个builder，这个builder和原始的client共享相同的连接池，分发器和配置。
+     */
+    private void setCall(){
+        final OkHttpClient okHttpClient = new OkHttpClient();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mRequest = new Request.Builder()
+                        .url(Constants.URL_DELAY_1)
+                        .build();
+                OkHttpClient okHttpClient1 = okHttpClient.newBuilder()
+                        .readTimeout(1000,TimeUnit.SECONDS)
+                        .build();
+                try {
+                    Response response1 = okHttpClient1.newCall(mRequest).execute();
+                    Log.d(Constants.TAG,"Response 1 succeeded: " + response1);
+                } catch (IOException e) {
+                    Log.d(Constants.TAG,"Response 1 failed: " + e);
+                }
+
+                OkHttpClient okHttpClient2 = okHttpClient.newBuilder()
+                        .readTimeout(3000, TimeUnit.SECONDS)
+                        .build();
+                try {
+                    Response response2 = okHttpClient2.newCall(mRequest).execute();
+                    Log.d(Constants.TAG,"Response 2 succeeded: " + response2);
+                } catch (IOException e) {
+                    Log.d(Constants.TAG,"Response 2 failed: " + e);
+                }
+            }
+        }).start();
     }
 
     /** 根据目录名（dirName）创建目录 */

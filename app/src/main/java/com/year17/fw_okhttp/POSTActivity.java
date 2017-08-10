@@ -19,6 +19,8 @@ import android.widget.Button;
 import java.io.File;
 import java.io.IOException;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -32,6 +34,8 @@ public class POSTActivity extends AppCompatActivity implements View.OnClickListe
     private Context mContext;
     /** POST提交Markdown格式文本 **/
     private Button btnPostMarkdown;
+    /** POST提交json **/
+    private Button btnPostJson;
     /** POST提交流 **/
     private Button btnPostStream;
     /** POST提交文件 **/
@@ -68,6 +72,8 @@ public class POSTActivity extends AppCompatActivity implements View.OnClickListe
     private void initView(){
         btnPostMarkdown = (Button)findViewById(R.id.btn_post_markdown);
         btnPostMarkdown.setOnClickListener(this);
+        btnPostJson = (Button)findViewById(R.id.btn_post_json);
+        btnPostJson.setOnClickListener(this);
         btnPostStream = (Button)findViewById(R.id.btn_post_stream);
         btnPostStream.setOnClickListener(this);
         btnPostFile = (Button)findViewById(R.id.btn_post_file);
@@ -84,6 +90,9 @@ public class POSTActivity extends AppCompatActivity implements View.OnClickListe
             switch (view.getId()){
                 case R.id.btn_post_markdown:
                     postMarkdown();
+                    break;
+                case R.id.btn_post_json:
+                    postJson();
                     break;
                 case R.id.btn_post_stream:
                     postStream();
@@ -161,6 +170,29 @@ public class POSTActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }).start();
+    }
+
+    /** post提交json **/
+    private void postJson(){
+        String jsonData = "haha";
+        mOkHttpClient = new OkHttpClient();
+
+        RequestBody requestBody = RequestBody.create(Constants.MEDIA_TYPE_JSON,jsonData);
+        mRequest = new Request.Builder()
+                .url(Constants.URL_JSON)
+                .post(requestBody)
+                .build();
+        mOkHttpClient.newCall(mRequest).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.d(Constants.TAG,e.toString());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Log.d(Constants.TAG,response.body().string());
+            }
+        });
     }
 
     /**

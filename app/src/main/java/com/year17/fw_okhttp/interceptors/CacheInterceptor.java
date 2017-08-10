@@ -22,7 +22,7 @@ public class CacheInterceptor implements Interceptor {
                 .removeHeader("Pragma")
                 .removeHeader("Cache-Control")
                 //缓存1天
-                .header("Cache-Control","max-age"+3600*24*30)
+                .header("Cache-Control","max-age="+3600*24*30)
                 .build();
         return response1;
     }
