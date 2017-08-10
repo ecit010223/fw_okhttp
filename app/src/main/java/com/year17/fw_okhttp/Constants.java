@@ -33,7 +33,7 @@ public class Constants {
     public static final String IMGUR_CLIENT_ID = "...";
     /** 申请访问网络权限的Request Code **/
     public static final int INTERNET_REQUEST_CODE = 1;
-    /** post请求的请求体内容为文本格式 **/
+        /** post请求的请求体内容为文本格式 **/
     public static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown;charset=utf-8");
     /** post请求的请求体内容为图片格式 **/
     public static final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");

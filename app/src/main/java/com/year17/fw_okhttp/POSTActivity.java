@@ -179,7 +179,7 @@ public class POSTActivity extends AppCompatActivity implements View.OnClickListe
 
         RequestBody requestBody = RequestBody.create(Constants.MEDIA_TYPE_JSON,jsonData);
         mRequest = new Request.Builder()
-                .url(Constants.URL_JSON)
+                .url(Constants.URL_POST_JSON)
                 .post(requestBody)
                 .build();
         mOkHttpClient.newCall(mRequest).enqueue(new Callback() {
