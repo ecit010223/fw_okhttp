@@ -132,10 +132,8 @@ public class POSTActivity extends AppCompatActivity implements View.OnClickListe
             ActivityCompat.requestPermissions(scanForActivity(mContext),new String[]{Manifest.permission.INTERNET},
                     Constants.INTERNET_REQUEST_CODE);
             ActivityCompat.shouldShowRequestPermissionRationale(scanForActivity(mContext),Manifest.permission.INTERNET);
-        }else{
-            return true;
         }
-        return false;
+        return hasPermission;
     }
 
     /**
